@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Artemedia — Alat Lukis</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#D85A30">
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Artemedia">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <!-- SEO -->
+  <meta name="description" content="Toko alat lukis online terpercaya. Cat, kuas, kanvas, pensil dari brand premium.">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+    body { display: flex; justify-content: center; align-items: flex-start; }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100vh;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .screen { display: none; flex-direction: column; flex: 1; }
+    .screen.active { display: flex; }
+    .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    /* TOP BAR */
+    .topbar { padding: 52px 16px 10px; border-bottom: 1px solid #f0f0f0; background: #fff; }
+    .topbar-row { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 20px; font-weight: 700; color: #1d1d1d; letter-spacing: -0.5px; }
+    .logo span { color: #D85A30; }
+    .cart-btn { background: none; border: none; cursor: pointer; position: relative; padding: 6px; }
+    .cart-icon { width: 24px; height: 24px; stroke: #1d1d1d; fill: none; stroke-width: 1.8; }
+    .badge { position: absolute; top: 0; right: 0; background: #D85A30; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .searchbar { margin-top: 12px; background: #f5f5f5; border-radius: 10px; padding: 10px 14px; font-size: 14px; color: #888; border: none; width: 100%; }
+
+    /* CATEGORIES */
+    .cats { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid #f0f0f0; }
+    .cats::-webkit-scrollbar { display: none; }
+    .pill { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; border: 1px solid #e0e0e0; background: #fff; color: #666; transition: all .15s; }
+    .pill.active { background: #1d1d1d; color: #fff; border-color: #1d1d1d; }
+
+    /* HERO */
+    .hero { margin: 16px; border-radius: 14px; background: #FFF3EE; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .hero h2 { font-size: 16px; font-weight: 700; color: #993C1D; }
+    .hero p { font-size: 12px; color: #D85A30; margin-top: 4px; }
+    .hero-badge { margin-top: 10px; display: inline-block; background: #D85A30; color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .hero-emoji { font-size: 44px; }
+
+    /* PRODUCTS */
+    .sec-title { font-size: 15px; font-weight: 700; color: #1d1d1d; padding: 4px 16px 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 100px; }
+    .pcard { background: #fff; border: 1px solid #f0f0f0; border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform .15s; }
+    .pcard:active { transform: scale(0.97); }
+    .pcard-img { height: 110px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+    .pcard-body { padding: 10px 12px 12px; }
+    .pcard-brand { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: .5px; }
+    .pcard-name { font-size: 12px; font-weight: 600; color: #1d1d1d; line-height: 1.4; margin-top: 3px; }
+    .pcard-price { font-size: 13px; font-weight: 700; color: #1d1d1d; margin-top: 6px; }
+    .pcard-orig { font-size: 10px; color: #bbb; text-decoration: line-through; margin-top: 1px; }
+    .add-btn { width: 100%; margin-top: 8px; background: #1d1d1d; color: #fff; border: none; border-radius: 8px; padding: 8px; font-size: 12px; cursor: pointer; font-weight: 600; }
+    .add-btn:active { background: #333; }
+
+    /* BOTTOM NAV */
+    .bnav { display: flex; border-top: 1px solid #f0f0f0; padding: 8px 0 24px; background: #fff; position: sticky; bottom: 0; }
+    .nitem { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 0; }
+    .nicon { width: 22px; height: 22px; stroke: #bbb; fill: none; stroke-width: 1.8; }
+    .nicon.on { stroke: #D85A30; }
+    .nlabel { font-size: 10px; color: #bbb; }
+    .nlabel.on { color: #D85A30; font-weight: 600; }
+
+    /* DETAIL */
+    .back-row { display: flex; align-items: center; gap: 8px; padding: 52px 16px 14px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+    .back-row svg { width: 20px; height: 20px; stroke: #1d1d1d; fill: none; stroke-width: 2; }
+    .back-row span { font-size: 15px; color: #1d1d1d; font-weight: 500; }
+    .det-hero { height: 200px; display: flex; align-items: center; justify-content: center; font-size: 72px; margin: 16px; border-radius: 14px; }
+    .det-body { padding: 0 16px 16px; }
+    .det-brand { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: .5px; }
+    .det-name { font-size: 20px; font-weight: 700; color: #1d1d1d; line-height: 1.3; margin-top: 4px; }
+    .det-price { font-size: 22px; font-weight: 700; color: #1d1d1d; margin-top: 8px; }
+    .det-orig { font-size: 14px; color: #bbb; text-decoration: line-through; margin-top: 2px; }
+    .det-desc { font-size: 14px; color: #666; line-height: 1.6; margin-top: 14px; }
+    .det-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+    .dtag { background: #f5f5f5; border-radius: 20px; padding: 5px 12px; font-size: 11px; color: #666; }
+    .det-add { margin: 16px; background: #D85A30; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer; width: calc(100% - 32px); }
+
+    /* CART */
+    .cart-hdr { padding: 52px 16px 14px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+    .cart-hdr h2 { font-size: 18px; font-weight: 700; }
+    .citem { display: flex; gap: 12px; align-items: center; background: #f9f9f9; border-radius: 12px; padding: 12px; }
+    .citem-img { font-size: 28px; width: 44px; text-align: center; }
+    .citem-info { flex: 1; }
+    .citem-name { font-size: 13px; font-weight: 600; color: #1d1d1d; }
+    .citem-sub { font-size: 11px; color: #999; margin-top: 2px; }
+    .citem-rm { font-size: 20px; cursor: pointer; color: #bbb; background: none; border: none; padding: 4px; }
+    .cart-footer { padding: 16px; border-top: 1px solid #f0f0f0; }
+    .cart-totrow { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .cart-totrow span { font-size: 13px; color: #666; }
+    .cart-totrow.big span { font-size: 16px; font-weight: 700; color: #1d1d1d; }
+    .checkout-btn { width: 100%; background: #D85A30; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 14px; }
+    .empty-cart { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #bbb; font-size: 14px; padding: 40px; }
+
+    /* PAYMENT */
+    .pay-hdr { padding: 52px 16px 14px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+    .pay-hdr h2 { font-size: 18px; font-weight: 700; }
+    .pay-section { padding: 16px 16px 6px; }
+    .pay-section-title { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+    .pay-option { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid #f0f0f0; border-radius: 12px; margin-bottom: 8px; cursor: pointer; background: #fff; transition: all .15s; }
+    .pay-option.selected { border: 2px solid #D85A30; background: #FFF3EE; }
+    .pay-icon { width: 42px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: #f5f5f5; flex-shrink: 0; }
+    .pay-name { font-size: 13px; font-weight: 600; color: #1d1d1d; }
+    .pay-sub { font-size: 11px; color: #999; margin-top: 2px; }
+    .pay-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+    .pay-radio.checked { border-color: #D85A30; background: #D85A30; }
+    .pay-radio.checked::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+    .order-sum { margin: 0 16px 16px; background: #f9f9f9; border-radius: 12px; padding: 14px; }
+    .order-sum-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .order-sum-row span { font-size: 13px; color: #666; }
+    .order-sum-row.total span { font-size: 15px; font-weight: 700; color: #1d1d1d; }
+    .order-sum-divider { height: 1px; background: #eee; margin: 10px 0; }
+    .pay-btn { margin: 0 16px 16px; background: #D85A30; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer; width: calc(100% - 32px); }
+    .secure-note { display: flex; align-items: center; gap: 6px; padding: 0 16px 24px; justify-content: center; }
+    .secure-note span { font-size: 11px; color: #bbb; }
+
+    /* SUCCESS */
+    .success-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; gap: 12px; }
+    .success-icon { font-size: 64px; }
+    .success-title { font-size: 22px; font-weight: 700; color: #1d1d1d; }
+    .success-sub { font-size: 14px; color: #666; line-height: 1.6; }
+    .success-code { background: #f5f5f5; border-radius: 10px; padding: 12px 24px; font-size: 15px; font-weight: 700; color: #1d1d1d; margin: 8px 0; letter-spacing: 2px; }
+    .success-home { background: #D85A30; color: #fff; border: none; border-radius: 12px; padding: 14px 36px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+
+    /* INSTALL BANNER */
+    .install-banner { display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 400px; background: #1d1d1d; color: #fff; border-radius: 14px; padding: 14px 16px; z-index: 100; }
+    .install-banner.show { display: flex; align-items: center; gap: 12px; }
+    .install-banner-text { flex: 1; font-size: 13px; line-height: 1.4; }
+    .install-banner-text b { display: block; font-size: 14px; margin-bottom: 2px; }
+    .install-btn-yes { background: #D85A30; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .install-btn-no { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="topbar">
+      <div class="topbar-row">
+        <span class="logo">arte<span>media</span></span>
+        <button class="cart-btn" onclick="goCart()">
+          <svg class="cart-icon" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <div class="badge" id="cbadge" style="display:none">0</div>
+        </button>
+      </div>
+      <div class="searchbar">🔍 Cari cat, kuas, kanvas, pensil...</div>
+    </div>
+    <div class="cats" id="cat-row"></div>
+    <div class="scroll">
+      <div class="hero">
+        <div>
+          <h2>Produk baru telah hadir</h2>
+          <p>Winsor & Newton & Hahnemühle</p>
+          <span class="hero-badge">Belanja sekarang</span>
+        </div>
+        <div class="hero-emoji">🎨</div>
+      </div>
+      <div class="sec-title">Produk Pilihan</div>
+      <div class="grid" id="pgrid"></div>
+    </div>
+    <div class="bnav">
+      <div class="nitem">
+        <svg class="nicon on" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="nlabel on">Beranda</span>
+      </div>
+      <div class="nitem">
+        <svg class="nicon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="nlabel">Cari</span>
+      </div>
+      <div class="nitem" onclick="goCart()">
+        <svg class="nicon" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+        <span class="nlabel">Keranjang</span>
+      </div>
+      <div class="nitem">
+        <svg class="nicon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nlabel">Profil</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="screen" id="s-detail">
+    <div class="back-row" onclick="goHome()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Kembali</span>
+    </div>
+    <div class="scroll">
+      <div class="det-hero" id="d-img"></div>
+      <div class="det-body">
+        <div class="det-brand" id="d-brand"></div>
+        <div class="det-name" id="d-name"></div>
+        <div class="det-price" id="d-price"></div>
+        <div class="det-orig" id="d-orig"></div>
+        <div class="det-desc" id="d-desc"></div>
+        <div class="det-tags" id="d-tags"></div>
+      </div>
+    </div>
+    <button class="det-add" id="d-add-btn">+ Tambah ke Keranjang</button>
+  </div>
+
+  <!-- CART -->
+  <div class="screen" id="s-cart">
+    <div class="cart-hdr">
+      <div style="cursor:pointer" onclick="goHome()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1d1d1d" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </div>
+      <h2>Keranjang Belanja</h2>
+    </div>
+    <div class="scroll" style="padding:16px;display:flex;flex-direction:column;gap:10px" id="cart-list"></div>
+    <div class="cart-footer" id="cart-foot"></div>
+  </div>
+
+  <!-- PAYMENT -->
+  <div class="screen" id="s-pay">
+    <div class="pay-hdr">
+      <div style="cursor:pointer" onclick="goCart()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1d1d1d" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </div>
+      <h2>Pilih Pembayaran</h2>
+    </div>
+    <div class="scroll">
+      <div class="pay-section">
+        <div class="pay-section-title">QRIS</div>
+        <div class="pay-option selected" id="po-qris" onclick="selectPay('qris')">
+          <div class="pay-icon">⬛</div>
+          <div class="pay-info"><div class="pay-name">QRIS</div><div class="pay-sub">GoPay, OVO, Dana, ShopeePay, semua bank</div></div>
+          <div class="pay-radio checked" id="pr-qris"></div>
+        </div>
+      </div>
+      <div class="pay-section">
+        <div class="pay-section-title">E-WALLET</div>
+        <div class="pay-option" id="po-gopay" onclick="selectPay('gopay')">
+          <div class="pay-icon" style="background:#00AED6;color:#fff;font-size:11px;font-weight:700">GP</div>
+          <div class="pay-info"><div class="pay-name">GoPay</div><div class="pay-sub">Saldo GoPay Anda</div></div>
+          <div class="pay-radio" id="pr-gopay"></div>
+        </div>
+        <div class="pay-option" id="po-ovo" onclick="selectPay('ovo')">
+          <div class="pay-icon" style="background:#4C3494;color:#fff;font-size:11px;font-weight:700">OVO</div>
+          <div class="pay-info"><div class="pay-name">OVO</div><div class="pay-sub">Saldo OVO Anda</div></div>
+          <div class="pay-radio" id="pr-ovo"></div>
+        </div>
+        <div class="pay-option" id="po-dana" onclick="selectPay('dana')">
+          <div class="pay-icon" style="background:#118EEA;color:#fff;font-size:11px;font-weight:700">DANA</div>
+          <div class="pay-info"><div class="pay-name">DANA</div><div class="pay-sub">Saldo DANA Anda</div></div>
+          <div class="pay-radio" id="pr-dana"></div>
+        </div>
+        <div class="pay-option" id="po-shopee" onclick="selectPay('shopee')">
+          <div class="pay-icon" style="background:#EE4D2D;color:#fff;font-size:11px;font-weight:700">SP</div>
+          <div class="pay-info"><div class="pay-name">ShopeePay</div><div class="pay-sub">Saldo ShopeePay Anda</div></div>
+          <div class="pay-radio" id="pr-shopee"></div>
+        </div>
+      </div>
+      <div class="pay-section">
+        <div class="pay-section-title">VIRTUAL ACCOUNT</div>
+        <div class="pay-option" id="po-bca" onclick="selectPay('bca')">
+          <div class="pay-icon" style="background:#003D7C;color:#fff;font-size:10px;font-weight:700">BCA</div>
+          <div class="pay-info"><div class="pay-name">BCA Virtual Account</div><div class="pay-sub">ATM, m-BCA, atau KlikBCA</div></div>
+          <div class="pay-radio" id="pr-bca"></div>
+        </div>
+        <div class="pay-option" id="po-mandiri" onclick="selectPay('mandiri')">
+          <div class="pay-icon" style="background:#003087;color:#fff;font-size:9px;font-weight:700">MAN</div>
+          <div class="pay-info"><div class="pay-name">Mandiri Virtual Account</div><div class="pay-sub">ATM atau Livin' by Mandiri</div></div>
+          <div class="pay-radio" id="pr-mandiri"></div>
+        </div>
+        <div class="pay-option" id="po-bni" onclick="selectPay('bni')">
+          <div class="pay-icon" style="background:#F58220;color:#fff;font-size:10px;font-weight:700">BNI</div>
+          <div class="pay-info"><div class="pay-name">BNI Virtual Account</div><div class="pay-sub">ATM atau BNI Mobile Banking</div></div>
+          <div class="pay-radio" id="pr-bni"></div>
+        </div>
+      </div>
+      <div class="pay-section">
+        <div class="pay-section-title">KARTU KREDIT / DEBIT</div>
+        <div class="pay-option" id="po-card" onclick="selectPay('card')">
+          <div class="pay-icon">💳</div>
+          <div class="pay-info"><div class="pay-name">Kartu Kredit / Debit</div><div class="pay-sub">Visa, Mastercard — aman via Midtrans</div></div>
+          <div class="pay-radio" id="pr-card"></div>
+        </div>
+      </div>
+      <div class="pay-section">
+        <div class="pay-section-title">GERAI RETAIL</div>
+        <div class="pay-option" id="po-alfa" onclick="selectPay('alfa')">
+          <div class="pay-icon" style="background:#E31837;color:#fff;font-size:9px;font-weight:700">ALF</div>
+          <div class="pay-info"><div class="pay-name">Alfamart / Indomaret</div><div class="pay-sub">Bayar tunai di kasir terdekat</div></div>
+          <div class="pay-radio" id="pr-alfa"></div>
+        </div>
+      </div>
+      <div class="pay-section" style="padding-bottom:0">
+        <div class="pay-section-title">RINGKASAN PESANAN</div>
+      </div>
+      <div class="order-sum" id="order-sum"></div>
+      <button class="pay-btn" id="pay-btn" onclick="confirmPay()">Bayar Sekarang</button>
+      <div class="secure-note">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span>Transaksi dijamin aman oleh Midtrans SSL 256-bit</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="screen" id="s-success">
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Pesanan Berhasil!</div>
+      <div class="success-sub">Terima kasih telah berbelanja di Artemedia. Pesanan Anda sedang diproses dan akan segera dikirim.</div>
+      <div class="success-code" id="order-code">ART-000000</div>
+      <div style="font-size:12px;color:#bbb">Simpan kode ini sebagai bukti pembelian</div>
+      <button class="success-home" onclick="goHome();resetCart()">Kembali ke Beranda</button>
+    </div>
+  </div>
+
+  <!-- INSTALL BANNER -->
+  <div class="install-banner" id="install-banner">
+    <div class="install-banner-text">
+      <b>Install Artemedia</b>
+      Tambahkan ke home screen untuk akses lebih cepat
+    </div>
+    <button class="install-btn-yes" id="install-btn">Install</button>
+    <button class="install-btn-no" onclick="document.getElementById('install-banner').classList.remove('show')">×</button>
+  </div>
+
+</div>
+
+<script>
+  const products = [
+    { id:1, name:"Winsor & Newton Cotman Set 12", brand:"Winsor & Newton", price:285000, orig:320000, emoji:"🎨", bg:"#FFF3EE", desc:"Set 12 warna cat air Cotman dalam tube 8ml. Pigmen berkualitas tinggi, cocok untuk pemula hingga profesional.", tags:["Cat Air","12 Warna","Tube 8ml"], cat:"Cat Air" },
+    { id:2, name:"Sakura Koi Watercolor Set 24", brand:"Sakura", price:420000, orig:null, emoji:"🌸", bg:"#FFF0F5", desc:"Set cat air portabel 24 warna dalam pan. Dengan kuas air isi ulang. Ideal untuk sketsa di lapangan.", tags:["Cat Air","24 Warna","Portabel"], cat:"Cat Air" },
+    { id:3, name:"Hahnemühle Watercolour Pad A4", brand:"Hahnemühle", price:192750, orig:257000, emoji:"📄", bg:"#EAF3DE", desc:"Kertas cat air premium 300gsm buatan Jerman. Cold pressed, 50 lembar, bebas asam.", tags:["Kertas","300gsm","A4"], cat:"Kertas" },
+    { id:4, name:"Derwent Graphic Pencils Set 12", brand:"Derwent", price:215000, orig:null, emoji:"✏️", bg:"#F5F5F5", desc:"Set 12 pensil grafis dari 6H hingga 6B. Isi grafit berkualitas tinggi untuk sketsa dan gambar teknis.", tags:["Pensil","Grafis","12 Pcs"], cat:"Pensil" },
+    { id:5, name:"Liquitex Heavy Body Acrylic 6x59ml", brand:"Liquitex", price:650000, orig:720000, emoji:"🖼️", bg:"#EAF3DE", desc:"Set 6 warna cat akrilik heavy body. Konsistensi kental, warna intens, cepat kering.", tags:["Cat Akrilik","Heavy Body","6 Warna"], cat:"Cat Akrilik" },
+    { id:6, name:"Raphael Kuas Cat Air No.8", brand:"Raphael", price:185000, orig:null, emoji:"🖌️", bg:"#FFF3EE", desc:"Kuas cat air Kolinsky sable premium dari Perancis. Ujung lancip sempurna untuk detail halus.", tags:["Kuas","Kolinsky","No.8"], cat:"Kuas" },
+    { id:7, name:"Prima Blue Kanvas Lukis 40x50cm", brand:"Prima Blue", price:95000, orig:null, emoji:"🟫", bg:"#FAEEDA", desc:"Kanvas lukis siap pakai berbahan katun India 40x50cm. Sudah dilapisi gesso.", tags:["Kanvas","40x50cm","Katun"], cat:"Kanvas" },
+    { id:8, name:"Molotow ONE4ALL Marker 2mm", brand:"Molotow", price:75000, orig:null, emoji:"🖊️", bg:"#EEEDFE", desc:"Marker akrilik premium berbasis air. Tahan air setelah kering, tersedia dalam 60+ warna.", tags:["Marker","Akrilik","2mm"], cat:"Marker" },
+  ];
+
+  const cats = ["Semua","Cat Air","Cat Akrilik","Kuas","Kertas","Kanvas","Pensil","Marker"];
+  let activeCat = "Semua", cart = [], selectedPay = "qris";
+
+  function formatRp(n) { return "Rp" + n.toLocaleString("id-ID"); }
+
+  function renderCats() {
+    document.getElementById("cat-row").innerHTML = cats.map(c =>
+      `<div class="pill${c===activeCat?" active":""}" onclick="setCat('${c}')">${c}</div>`
+    ).join("");
+  }
+
+  function setCat(c) { activeCat = c; renderCats(); renderProducts(); }
+
+  function renderProducts() {
+    const list = activeCat === "Semua" ? products : products.filter(p => p.cat === activeCat);
+    document.getElementById("pgrid").innerHTML = list.map(p => `
+      <div class="pcard" onclick="goDetail(${p.id})">
+        <div class="pcard-img" style="background:${p.bg}">${p.emoji}</div>
+        <div class="pcard-body">
+          <div class="pcard-brand">${p.brand}</div>
+          <div class="pcard-name">${p.name}</div>
+          <div class="pcard-price">${formatRp(p.price)}</div>
+          ${p.orig ? `<div class="pcard-orig">${formatRp(p.orig)}</div>` : ""}
+          <button class="add-btn" onclick="event.stopPropagation();addCart(${p.id})">+ Keranjang</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function goDetail(id) {
+    const p = products.find(x => x.id === id);
+    document.getElementById("d-img").textContent = p.emoji;
+    document.getElementById("d-img").style.background = p.bg;
+    document.getElementById("d-brand").textContent = p.brand;
+    document.getElementById("d-name").textContent = p.name;
+    document.getElementById("d-price").textContent = formatRp(p.price);
+    document.getElementById("d-orig").textContent = p.orig ? formatRp(p.orig) : "";
+    document.getElementById("d-desc").textContent = p.desc;
+    document.getElementById("d-tags").innerHTML = p.tags.map(t => `<span class="dtag">${t}</span>`).join("");
+    document.getElementById("d-add-btn").onclick = () => { addCart(p.id); goCart(); };
+    showScreen("s-detail");
+  }
+
+  function addCart(id) {
+    cart.push(products.find(p => p.id === id));
+    updateBadge();
+  }
+
+  function updateBadge() {
+    const b = document.getElementById("cbadge");
+    b.style.display = cart.length > 0 ? "flex" : "none";
+    b.textContent = cart.length;
+  }
+
+  function goCart() {
+    const list = document.getElementById("cart-list");
+    const foot = document.getElementById("cart-foot");
+    if (cart.length === 0) {
+      list.innerHTML = '<div class="empty-cart"><span style="font-size:40px">🛒</span><span>Keranjang masih kosong</span></div>';
+      foot.innerHTML = "";
+    } else {
+      list.innerHTML = cart.map((p, i) => `
+        <div class="citem">
+          <div class="citem-img">${p.emoji}</div>
+          <div class="citem-info">
+            <div class="citem-name">${p.name}</div>
+            <div class="citem-sub">${p.brand} · ${formatRp(p.price)}</div>
+          </div>
+          <button class="citem-rm" onclick="removeCart(${i})">×</button>
+        </div>
+      `).join("");
+      const sub = cart.reduce((s, p) => s + p.price, 0);
+      const ongkir = 25000;
+      foot.innerHTML = `
+        <div class="cart-totrow"><span>Subtotal (${cart.length} produk)</span><span>${formatRp(sub)}</span></div>
+        <div class="cart-totrow"><span>Ongkos kirim</span><span>${formatRp(ongkir)}</span></div>
+        <div class="cart-totrow big"><span>Total</span><span>${formatRp(sub + ongkir)}</span></div>
+        <button class="checkout-btn" onclick="goPay()">Lanjut ke Pembayaran →</button>
+      `;
+    }
+    showScreen("s-cart");
+  }
+
+  function removeCart(i) { cart.splice(i, 1); updateBadge(); goCart(); }
+
+  function goPay() {
+    const sub = cart.reduce((s, p) => s + p.price, 0);
+    const ongkir = 25000;
+    document.getElementById("order-sum").innerHTML = `
+      <div class="order-sum-row"><span>${cart.length} produk</span><span>${formatRp(sub)}</span></div>
+      <div class="order-sum-row"><span>Ongkos kirim</span><span>${formatRp(ongkir)}</span></div>
+      <div class="order-sum-divider"></div>
+      <div class="order-sum-row total"><span>Total Pembayaran</span><span>${formatRp(sub + ongkir)}</span></div>
+    `;
+    document.getElementById("pay-btn").textContent = "Bayar " + formatRp(sub + ongkir);
+    showScreen("s-pay");
+  }
+
+  const payKeys = ["qris","gopay","ovo","dana","shopee","bca","mandiri","bni","card","alfa"];
+  function selectPay(k) {
+    selectedPay = k;
+    payKeys.forEach(pk => {
+      document.getElementById("po-"+pk).classList.toggle("selected", pk === k);
+      const r = document.getElementById("pr-"+pk);
+      r.classList.toggle("checked", pk === k);
+    });
+  }
+
+  function confirmPay() {
+    document.getElementById("order-code").textContent = "ART-" + Math.floor(100000 + Math.random() * 900000);
+    showScreen("s-success");
+  }
+
+  function resetCart() { cart = []; updateBadge(); }
+  function goHome() { showScreen("s-home"); }
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  // PWA Install Prompt
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    setTimeout(() => {
+      document.getElementById('install-banner').classList.add('show');
+    }, 3000);
+  });
+
+  document.getElementById('install-btn').addEventListener('click', () => {
+    document.getElementById('install-banner').classList.remove('show');
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    }
+  });
+
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log('✅ Service Worker aktif'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+
+  renderCats();
+  renderProducts();
+  selectPay("qris");
+</script>
+</body>
+</html>
